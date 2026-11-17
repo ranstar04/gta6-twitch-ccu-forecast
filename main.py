@@ -175,6 +175,12 @@ def forecast_case(case):
                 res = [y - (my + b * (x - mx)) for x, y in rows]
                 mu += statistics.median(res)
                 sd = statistics.pstdev(res) if len(res) > 1 else 0.3
+                # Guard against wild extrapolation: the target's hour 1 will
+                # be beyond the training range, so cap the fitted centre to
+                # the observed log-ratio range for the hour. At any plausible
+                # hour-1 print this does not bind; it only stops a runaway
+                # slope from forecasting a curve no launch has ever shown.
+                mu = min(max(mu, min(ys)), max(ys))
                 qs = [p1 * math.exp(mu + z * sd) for z in Z]
             else:
                 qs = None
